@@ -1,0 +1,7 @@
+1. The models I have created fit are Transaction Script models. Why? Because it organizes all the logic primarily as a single procedure, making calls directly to the database or through a thin database wrapper. Other implementations, such as active records, would fit in the Domain Model type.
+
+2. The controller type is of type Front Controller. It's not a Page Controller, because it comes in conjunction with a router, that decides which models to process, and what views to show. I think most frameworks come with a front controller, because the developer needs more flexibility in
+controlling the flow of the user requests, based on different criteria. Conversely, a page controller is useful in CMSes like Wordpress, where there is a hierarchic logic, and predefined route structure.
+
+3. I consider none of the mentioned view presentation patterns are what is used in my case. It's not a Template View, because certainly I am not using template tags that are resolved into actual HTML output. It's not a Transform View, because the
+model data does not have transforms methods to each datum. The Two Step View is better at what I used, because the model data is first obtained and prepared for output, and then in second step, it's processed for final output.
