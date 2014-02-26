@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<div id="scoreboard"></div>
+</body>
+<script src="jquery-2.1.0.min.js"></script>
+<script>
+    var publisher = {
+        subscribers: {
+            any: []
+        },
+        on: function (event, fn, context) {
+            event = event || 'any';
+            fn = typeof fn === "function" ? fn : context[fn];
+
+            if (typeof this.subscribers[event] === "undefined") {
+                this.subscribers[event] = []; //creates container for this event
+            }
+            this.subscribers[event].push({fn: fn, context: context || this}); //adds callback info
+        },
+        fire: function (event, publication) {
+            this.announceSubscribers('publish', event, publication);
+        },
+        announceSubscribers: function (action, event, arg, context) {
+            var event = event || 'any',
+                    subscribers = this.subscribers[event];
+
+            for (var i in subscribers) {
+                if (action === 'publish') {
+                    subscribers[i].fn.call(subscribers[i].context, arg);
+                } else {
+                    if (subscribers[i].fn === arg && subscribers[i].context === context) {
+                        subscribers.splice(i, 1);
+                    }
+                }
+            }
+        }
+    };
+
+
+    function makePublisher(o) {
+        for (var i in publisher) {
+            if (publisher.hasOwnProperty(i)) {
+                o[i] = publisher[i];
+            }
+        }
+    }
+
+    var game = {
+
+        keys: {},
+
+        addPlayer: function (player) {
+            var key = player.key.toString().toUpperCase().charCodeAt(0);
+            this.keys[key] = player;
+        },
+
+        handleKeypress: function (event) {
+            if (game.keys[event.which]) {
+                game.keys[event.which].play();
+            }
+        },
+
+        handlePlay: function () {
+            var players = this.keys,
+                    score = {};
+
+            for (var i in players) {
+                if (players.hasOwnProperty(i)) {
+                    score[players[i].name] = players[i].points;
+                }
+            }
+            this.fire('score/changed', score);
+        }
+    };
+
+    function Player(name, key) {
+        this.points = 0;
+        this.name = name;
+        this.key = key;
+        this.fire('player/created', this);
+    }
+
+    Player.prototype.play = function () {
+        this.points += 1;
+        this.fire('player/playing', this);
+    };
+
+    var scoreboard = {
+
+        element: $('#scoreboard'),
+
+        update: function (score) {
+            var msg = '';
+            for (var i in score) {
+                if (score.hasOwnProperty(i)) {
+                    msg += '<p><strong>' + i + '<\/strong>: ';
+                    msg += score[i];
+                    msg += '<\/p>';
+                }
+            }
+            this.element.html(msg);
+        }
+    };
+
+
+    makePublisher(Player.prototype);
+    makePublisher(game);
+
+    Player.prototype.on("player/created", "addPlayer", game);
+    Player.prototype.on("player/playing", "handlePlay", game);
+
+    game.on("score/changed", scoreboard.update, scoreboard);
+
+    $(window).keyup(game.handleKeypress);
+
+    var playername, key;
+    while (1) {
+        playername = prompt("Add player (name)");
+        if (!playername) {
+            break;
+        }
+        while (1) {
+            key = prompt("Key for " + playername + "?");
+            if (key) {
+                break;
+            }
+        }
+        new Player(playername, key);
+    }
+</script>
+</html>

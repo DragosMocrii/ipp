@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<input type="button" value="Start / Restart" onclick="Mediator.restart()"/>
+
+<div id="scoreboard"></div>
+</body>
+<script src="jquery-2.1.0.min.js"></script>
+<script>
+    function Player(event_key) {
+        var parent = this;
+        this.score = 0;
+        this.event_key = event_key;
+
+        this.play = function (game_length, callback) {
+            this.score = 0;
+
+            function _handle_key_detection(event) {
+                Mediator.detect_keys(event);
+            };
+
+            $(document).on('keyup', 'body', {event_key: this.event_key, increase_callback: this.increase_score}, _handle_key_detection);
+            console.log('started');
+            setTimeout(function () {
+                $(document).off('keyup', 'body', _handle_key_detection); //unbind event for current player
+                console.log('ended');
+                callback();
+            }, game_length * 1000);
+        }
+
+        this.increase_score = function (by) {
+            by = by || 1;
+            parent.score = parent.score + by;
+        }
+    }
+
+    var player1 = new Player(81), //q key
+            player2 = new Player(87); //w key
+
+    var Scoreboard = new function () {
+
+        this.scoreboard_element = $('#scoreboard');
+
+        this.clear = function () {
+            this.scoreboard_element.html('');
+        }
+
+        this.update = function (players) {
+            this.clear();
+            for (var i in players) {
+                this.scoreboard_element.append('<p>' + i + ': ' + players[i] + '</p>');
+            }
+        }
+    };
+
+    var Mediator = new function () {
+        this.players = {'Player1': player1, 'Player2': player2};
+        this.queue = [];
+        this.game_length = 3; //seconds
+        this.state = '';
+        this.restart = function () {
+            this.update_scores();
+            for (var i in this.players) {
+                this.queue.push(this.players[i]);
+            }
+            this.next_player();
+        }
+
+        this.update_scores = function () {
+            var score_object = {};
+            for (var i in this.players) {
+                score_object[i] = this.players[i].score;
+            }
+            Scoreboard.update(score_object);
+        }
+
+        this.player_played = function () {
+            this.update_scores();
+            this.next_player();
+        }
+
+        this.detect_keys = function (event) {
+            if (event.keyCode === event.data.event_key) {
+                event.data.increase_callback(1);
+            }
+        }
+
+        this.next_player = function () {
+            if (this.queue.length <= 0) {
+                //do something
+                return;
+            }
+            var _player = this.queue.shift();
+            alert('Player turn has started');
+            _player.play(this.game_length, function () {
+                Mediator.player_played()
+            });
+        }
+    };
+
+
+</script>
+</html>

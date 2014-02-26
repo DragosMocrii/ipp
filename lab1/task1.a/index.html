@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<div class="triggers">
+    <button value="Chisinau">Fetch Chisinau Weather</button>
+    <button value="London">Fetch London Weather</button>
+    <button value="Paris">Fetch Paris Weather</button>
+    <button value="Edmonton">Fetch Edmonton Weather</button>
+    <button value="Calgary">Fetch Calgary Weather</button>
+    <button value="Bucharest">Fetch Bucharest Weather</button>
+</div>
+<div id="console"></div>
+</body>
+<script src="jquery-2.1.0.min.js"></script>
+<script>
+    function microtime(get_as_float) {
+        var now = new Date().getTime() / 1000;
+        var s = parseInt(now, 10);
+
+        return (get_as_float) ? now : (Math.round((now - s) * 1000) / 1000) + ' ' + s;
+    }
+
+    jQuery(document).ready(function ($) {
+        $('.triggers').on('click', 'button', function () {
+            $obj = $(this);
+            $this_par = $("<p>Fetching: " + $obj.val() + "</p>");
+            $('#console').prepend($this_par);
+            var time_now = microtime(true);
+            $.ajax({
+                url: 'http://api.openweathermap.org/data/2.5/find?q=' + $obj.val() + '&mode=json',
+                dataType: "jsonp",
+                cache: false,
+                success: function (data) {
+                    $this_par.append("<strong> -> " + (microtime(true) - time_now) + "ms</strong>");
+                }
+            });
+        });
+    });
+</script>
+</html>
